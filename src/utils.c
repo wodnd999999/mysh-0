@@ -1,5 +1,6 @@
-#include "utils.h"
 #include <malloc.h>
+
+#include "utils.h"
 
 #define MAX 8096
 
@@ -9,21 +10,21 @@ void mysh_parse_command(const char* command,
 	int state = 0;
 	int count = 0;
 	int start[MAX], end[MAX];
-	int i, j;
+	int i, j, k;
 
-	for(i = 0; command[i]; i++)
+	for (i = 0; command[i]; i++)
 	{
-		switch(state)
+		switch (state)
 		{
 		case 0:
-			if(!(command[i] == ' ' || command[i] == '\t' || command[i] == '\n'))
+			if (!(command[i] == ' ' || command[i] == '\t' || command[i] == '\n'))
 			{
 				state = 1;
 				start[count] = i;
 			}
 			break;
 		case 1:
-			if(command[i] == ' ' || command[i] == '\t' || command[i] == '\n')
+			if (command[i] == ' ' || command[i] == '\t' || command[i] == '\n')
 			{
 				state = 0;
 				end[count] = i;
@@ -32,26 +33,26 @@ void mysh_parse_command(const char* command,
 			break;
 		}
 	}
-	if(state == 1)
+	if (state == 1)
 		end[count++] = i;
 
-	if(count)
+	if (count)
 	{
 		(*argc) = count;
-		(*argv) = (char**)malloc(sizeof(char*) * count);
+		(*argv) = (char**) malloc(sizeof(char*) * count);
 		for(i = 0; i < count; i++)
 		{
-			(*argv)[i] = (char*)malloc(sizeof(char) * (end[i] - start[i] + 1));
-			for(j = start[i]; j < end[i]; j++)
-				(*argv)[i][j - start[i]] = command[j];
-			(*argv)[i][end[i] - start[i]] = '\0';
+			(*argv)[i] = (char*) malloc(sizeof(char) * (end[i] - start[i] + 1));
+			for(j = start[i], k = 0; j < end[i]; j++, k++)
+				(*argv)[i][k] = command[j];
+			(*argv)[i][k] = '\0';
 		}
 	}
 	else
 	{
 		(*argc) = 1;
-		(*argv) = (char**)malloc(sizeof(char*));
-		(*argv)[0] = (char*)malloc(sizeof(char));
+		(*argv) = (char**) malloc(sizeof(char*));
+		(*argv)[0] = (char*) malloc(sizeof(char));
 		(*argv)[0][0] = '\0';
 	}
 }
