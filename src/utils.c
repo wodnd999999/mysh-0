@@ -2,15 +2,20 @@
 
 #include "utils.h"
 
-#define MAX 8096
-
-void mysh_parse_command(const char* command,
-                        int *argc, char*** argv)
+typedef struct TOKEN
 {
-	int state = 0;
-	int count = 0;
-	int start[MAX], end[MAX];
-	int i, j, k;
+	int		start;
+	int		end;
+	struct TOKEN	*next;
+} TOKEN;
+
+void mysh_parse_command(const char *command, int *argc, char ***argv)
+{
+	int	state = 0;
+	int	count = 0;
+	TOKEN	*head = NULL;
+	TOKEN	*tail = NULL;
+	int	i, j, k;
 
 	for (i = 0; command[i]; i++)
 	{
@@ -20,39 +25,47 @@ void mysh_parse_command(const char* command,
 			if (!(command[i] == ' ' || command[i] == '\t' || command[i] == '\n'))
 			{
 				state = 1;
-				start[count] = i;
+				count++;
+				if (head)
+					tail = tail->next = (TOKEN*) malloc(sizeof(TOKEN));
+				else
+					head = tail = (TOKEN*) malloc(sizeof(TOKEN));
+				tail->start = i;
+				tail->next = NULL;
 			}
 			break;
 		case 1:
 			if (command[i] == ' ' || command[i] == '\t' || command[i] == '\n')
 			{
 				state = 0;
-				end[count] = i;
-				count++;
+				tail->end = i;
 			}
 			break;
 		}
 	}
 	if (state == 1)
-		end[count++] = i;
+		tail->end = i;
 
 	if (count)
 	{
 		(*argc) = count;
-		(*argv) = (char**) malloc(sizeof(char*) * count);
+		(*argv) = (char **) malloc(sizeof(char *) * count);
 		for(i = 0; i < count; i++)
 		{
-			(*argv)[i] = (char*) malloc(sizeof(char) * (end[i] - start[i] + 1));
-			for(j = start[i], k = 0; j < end[i]; j++, k++)
+			(*argv)[i] = (char *) malloc(sizeof(char) * (head->end - head->start + 1));
+			for(j = head->start, k = 0; j < head->end; j++, k++)
 				(*argv)[i][k] = command[j];
 			(*argv)[i][k] = '\0';
+			tail = head;
+			head = head->next;
+			free(tail);
 		}
 	}
 	else
 	{
 		(*argc) = 1;
-		(*argv) = (char**) malloc(sizeof(char*));
-		(*argv)[0] = (char*) malloc(sizeof(char));
+		(*argv) = (char **) malloc(sizeof(char *));
+		(*argv)[0] = (char *) malloc(sizeof(char));
 		(*argv)[0][0] = '\0';
 	}
 }
